@@ -1,4 +1,4 @@
- #include <SPI.h>  
+sH #include <SPI.h>  
  #include <Ethernet.h> 
  #include <avr/pgmspace.h>
 
@@ -8,9 +8,13 @@
  const int Q = 3; //max 10
  int outA[10] = {2,3,5,6,7,8,9}; //,14,15,16,17}; // Select the pinout address
  boolean outS[10] = {0,0,0,0,0,0,0,0,0,0};
+ int outT[10] = {0,0,0,0,0,0,0,0,0,0};
  boolean rdg = false;
+ boolean rdp = false;
  int outp = 0;
  int k;
+ unsigned long lastConnectionTime = 0;
+ const unsigned long postingInterval = 60L * 1000L;
  
 const unsigned char htm[] PROGMEM = {"<html><head> <title>Home Switching</title> \
 <meta name=\"description\" content=\"Home Switching\"/>  \
@@ -88,8 +92,24 @@ mreq.send(null); }</script></head><body> \
  } 
 
 void loop() { 
+  
+  if (millis() - lastConnectionTime > postingInterval) {
+     for (int i=0; i<10; i++)
+     {
+        if (outT[i] > 1) { 
+          outT[i] = (outT[i] - 1);
+        } 
+        if (outT[i] = 1) { 
+          outT[i] = 0;
+          digitalWrite(outA[i], LOW);
+        } 
+     }
+
+     lastConnectionTime = millis();
+  }
+  
   EthernetClient cl = server.available();
-   
+  
   if (cl) {       
     boolean sH = false; //Imprimir cabeçalho
     boolean inS[10] = {0,0,0,0,0,0,0,0,0,0};
@@ -101,8 +121,9 @@ void loop() {
         char c = cl.read(); 
         Serial.print(c); 
         
-        if(rdg && c == ' '){ rdg = false; }
+        if(rdg && c == ' '){ rdg = false; rdp = false; }
         if(c == '?') { rdg = true; } 
+        if(c == '&') { rdp = true; } 
         
         if(rdg){  
           if(c == 'H') { outp = 1; }
@@ -114,6 +135,14 @@ void loop() {
             digitalWrite(outA[v], outp);
           }
         }  
+
+        if(rdp){           
+          if(c=='0'||c=='1'||c=='2'||c=='3'||c=='4'||c=='5'||c=='6'||c=='7'||c=='8'||c=='9'){ 
+            int v = atoi(&c); 
+            outS[T] = v * 60;
+          }
+        }  
+        
         if (c == '\n') { 
            if(!sH){
              pntHed(cl); 
