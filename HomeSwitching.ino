@@ -1,18 +1,19 @@
-sH #include <SPI.h>  
+ #include <SPI.h>  
  #include <Ethernet.h> 
  #include <avr/pgmspace.h>
 
  byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  
  IPAddress ip( 192, 168, 1, 75 );
- EthernetServer server(28675);
- const int Q = 3; //max 10
- int outA[10] = {2,3,5,6,7,8,9}; //,14,15,16,17}; // Select the pinout address
+ EthernetServer server(80);
+ const int Q = 10; //max 10
+ int outA[10] = {2,3,5,6,7,8,9,14,15,16}; // Select the pinout address
  boolean outS[10] = {0,0,0,0,0,0,0,0,0,0};
  int outT[10] = {0,0,0,0,0,0,0,0,0,0};
  boolean rdg = false;
  boolean rdp = false;
  int outp = 0;
  int k;
+ int pin;
  unsigned long lastConnectionTime = 0;
  const unsigned long postingInterval = 60L * 1000L;
  
@@ -99,12 +100,11 @@ void loop() {
         if (outT[i] > 1) { 
           outT[i] = (outT[i] - 1);
         } 
-        if (outT[i] = 1) { 
+        if (outT[i] == 1) { 
           outT[i] = 0;
           digitalWrite(outA[i], LOW);
         } 
      }
-
      lastConnectionTime = millis();
   }
   
@@ -112,34 +112,32 @@ void loop() {
   
   if (cl) {       
     boolean sH = false; //Imprimir cabeçalho
-    boolean inS[10] = {0,0,0,0,0,0,0,0,0,0};
     boolean outp;
      
     while (cl.connected()) { 
       if (cl.available()) { 
                
         char c = cl.read(); 
-        Serial.print(c); 
         
         if(rdg && c == ' '){ rdg = false; rdp = false; }
         if(c == '?') { rdg = true; } 
         if(c == '&') { rdp = true; } 
         
-        if(rdg){  
+        if(rdg && !rdp){  
           if(c == 'H') { outp = 1; }
           if(c == 'L') { outp = 0; }         
           if(c=='0'||c=='1'||c=='2'||c=='3'||c=='4'||c=='5'||c=='6'||c=='7'||c=='8'||c=='9'){ 
             sH = true;
-            int v = atoi(&c); 
-            outS[v] = outp;
-            digitalWrite(outA[v], outp);
+            pin = atoi(&c); 
+            outS[pin] = outp;
+            digitalWrite(outA[pin], outp);
           }
         }  
-
-        if(rdp){           
+        
+        if((rdp) && (pin >= 0)){           
           if(c=='0'||c=='1'||c=='2'||c=='3'||c=='4'||c=='5'||c=='6'||c=='7'||c=='8'||c=='9'){ 
             int v = atoi(&c); 
-            outS[T] = v * 60;
+            outT[pin] = v * 60;
           }
         }  
         
@@ -149,15 +147,14 @@ void loop() {
              for (int b = 0; b < Q; b++){           
                pChk(cl, b, outS[b]);
             } 
-            
-  
             pntFooter(cl); 
-          } else { 
+         } else { 
             for (int j = 0; j < Q ; j++) { cl.print(outS[j]); };  
-          } 
-          delay(2);     
-          cl.stop();  
-          break;      
+         } 
+         delay(2);     
+         cl.stop();  
+         pin = -1;
+         break;      
         } 
       }
     }       
