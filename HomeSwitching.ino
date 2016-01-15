@@ -1,22 +1,22 @@
- #include <SPI.h>  
- #include <Ethernet.h> 
- #include <avr/pgmspace.h>
+#include <SPI.h>
+#include <Ethernet.h>
+#include <avr/pgmspace.h>
 
- byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  
- IPAddress ip( 192, 168, 1, 75 );
- EthernetServer server(80);
- const int Q = 10; //max 10
- int outA[10] = {2,3,5,6,7,8,9,14,15,16}; // Select the pinout address
- boolean outS[10] = {0,0,0,0,0,0,0,0,0,0};
- int outT[10] = {0,0,0,0,0,0,0,0,0,0};
- boolean rdg = false;
- boolean rdp = false;
- int outp = 0;
- int k;
- int pin;
- unsigned long lastConnectionTime = 0;
- const unsigned long postingInterval = 60L * 1000L;
- 
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+IPAddress ip( 192, 168, 1, 75 );
+EthernetServer server(80);
+const int Q = 10; //max 10
+int outA[10] = {2, 3, 5, 6, 7, 8, 9, 14, 15, 16}; // Select the pinout address
+boolean outS[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int outT[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+boolean rdg = false;
+boolean rdp = false;
+int outp = 0;
+int k;
+int pin;
+unsigned long lastConnectionTime = 0;
+const unsigned long postingInterval = 60L * 1000L;
+
 const unsigned char htm[] PROGMEM = {"<html><head> <title>Home Switching</title> \
 <meta name=\"description\" content=\"Home Switching\"/>  \
 <meta http-equiv=\"refresh\" content=\"600000\"; url=/\"\">  \
@@ -61,13 +61,13 @@ label{text-align: center;} </style><script language=\"javascript\" type=\"text/j
 function altCkb (pos, sts){ \
  if (document.getElementById(\"chk\"+pos).checked != sts) { \
    document.getElementById(\"chk\"+pos).checked = sts; \
- }; }; \ 
+ }; }; \
 function processar(ident){ var mreq; document.body.style.cursor = 'wait'; \
-if(window.XMLHttpRequest){ mreq = new XMLHttpRequest(); \ 
+if(window.XMLHttpRequest){ mreq = new XMLHttpRequest(); \
 }else if(window.ActiveXObject){mreq = new ActiveXObject(\"Microsoft.XMLHTTP\"); \
-}else{ alert(\"Seu navegador não tem suporte a AJAX.\"); } \ 
+}else{ alert(\"Seu navegador não tem suporte a AJAX.\"); } \
 var x = \"L\"; \
-if(document.getElementById(\"chk\"+ident).checked){ x = \"H\"; }; \ 
+if(document.getElementById(\"chk\"+ident).checked){ x = \"H\"; }; \
 mreq.onreadystatechange = function() { \
 if(mreq.readyState == 1){ document.body.style.cursor = 'default'; \
 }else if(mreq.readyState == 4){ var req = mreq.responseText; \
@@ -76,102 +76,121 @@ if(mreq.readyState == 1){ document.body.style.cursor = 'default'; \
 mreq.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded;charset=iso-8859-1\"); \
 mreq.send(null); }</script></head><body> \
 <form method=\"get\">  \
-<div class=\"view\"><div class=\"header-wrapper\" id=\"DivPrincipal\"> <h1>Home Switching</h1></div>"} ;  
+<div class=\"view\"><div class=\"header-wrapper\" id=\"DivPrincipal\"> <h1>Home Switching</h1></div>"
+                                    } ;
 
- void setup()  
- {  
-   Ethernet.begin(mac, ip); 
-   server.begin();
-   
-   Serial.begin(9600);
-   
-   for (int y = 0; y < Q; y++){
-     pinMode(outA[y], OUTPUT);
-   }  
-   delay(2);   
-   Serial.println(Ethernet.localIP());
- } 
+void setup()
+{
+  Ethernet.begin(mac, ip);
+  server.begin();
 
-void loop() { 
-  
-  if (millis() - lastConnectionTime > postingInterval) {
-     for (int i=0; i<10; i++)
-     {
-        if (outT[i] > 1) { 
-          outT[i] = (outT[i] - 1);
-        } 
-        if (outT[i] == 1) { 
-          outT[i] = 0;
-          digitalWrite(outA[i], LOW);
-        } 
-     }
-     lastConnectionTime = millis();
+  Serial.begin(9600);
+
+  for (int y = 0; y < Q; y++) {
+    pinMode(outA[y], OUTPUT);
   }
-  
+  delay(2);
+  Serial.println(Ethernet.localIP());
+}
+
+void loop() {
+
+  if (millis() - lastConnectionTime > postingInterval) {
+    for (int i = 0; i < 10; i++)
+    {
+      if (outT[i] > 1) {
+        outT[i] = (outT[i] - 1);
+      }
+      if (outT[i] == 1) {
+        outT[i] = 0;
+        digitalWrite(outA[i], LOW);
+      }
+    }
+    lastConnectionTime = millis();
+  }
+
   EthernetClient cl = server.available();
-  
-  if (cl) {       
+
+  if (cl) {
     boolean sH = false; //Imprimir cabeçalho
     boolean outp;
-     
-    while (cl.connected()) { 
-      if (cl.available()) { 
-               
-        char c = cl.read(); 
-        
-        if(rdg && c == ' '){ rdg = false; rdp = false; }
-        if(c == '?') { rdg = true; } 
-        if(c == '&') { rdp = true; } 
-        
-        if(rdg && !rdp){  
-          if(c == 'H') { outp = 1; }
-          if(c == 'L') { outp = 0; }         
-          if(c=='0'||c=='1'||c=='2'||c=='3'||c=='4'||c=='5'||c=='6'||c=='7'||c=='8'||c=='9'){ 
+
+    while (cl.connected()) {
+      if (cl.available()) {
+
+        char c = cl.read();
+
+        if (rdg && c == ' ') {
+          rdg = false;
+          rdp = false;
+        }
+        if (c == '?') {
+          rdg = true;
+        }
+        if (c == '&') {
+          rdp = true;
+        }
+
+        if (rdg && !rdp) {
+          if (c == 'H') {
+            outp = 1;
+          }
+          if (c == 'L') {
+            outp = 0;
+          }
+          if (c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9') {
             sH = true;
-            pin = atoi(&c); 
+            pin = atoi(&c);
             outS[pin] = outp;
             digitalWrite(outA[pin], outp);
           }
-        }  
-        
-        if((rdp) && (pin >= 0)){           
-          if(c=='0'||c=='1'||c=='2'||c=='3'||c=='4'||c=='5'||c=='6'||c=='7'||c=='8'||c=='9'){ 
-            int v = atoi(&c); 
+        }
+
+        if (rdg && c == 'S')
+        {
+          sH = true;
+        }
+
+        if ((rdp) && (pin >= 0)) {
+          if (c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9') {
+            int v = atoi(&c);
             outT[pin] = v * 60;
           }
-        }  
-        
-        if (c == '\n') { 
-           if(!sH){
-             pntHed(cl); 
-             for (int b = 0; b < Q; b++){           
-               pChk(cl, b, outS[b]);
-            } 
-            pntFooter(cl); 
-         } else { 
-            for (int j = 0; j < Q ; j++) { cl.print(outS[j]); };  
-         } 
-         delay(2);     
-         cl.stop();  
-         pin = -1;
-         break;      
-        } 
-      }
-    }       
-  }  
-} 
+        }
 
- void pntHed(EthernetClient cl){
-   cl.println("HTTP/1.1 200 OK");  
-   cl.println("Content-Type: text/html");  
-   cl.println("Connection: close");  
-   cl.println(); 
-   char c;
-   k = 0;
-   do {
-     c = (char)pgm_read_byte_near(htm + k++);
-     cl.print(c);
-   } while (c!='\0');
+        if (c == '\n') {
+          if (!sH) {
+            pntHed(cl);
+            for (int b = 0; b < Q; b++) {
+              pChk(cl, b, outS[b]);
+            }
+            pntFooter(cl);
+          } else {
+            for (int j = 0; j < Q ; j++) {
+              cl.print(outS[j]);
+            };
+          }
+          delay(2);
+          cl.stop();
+          pin = -1;
+          break;
+        }
+      }
+    }
+  }
+}
+
+void pntHed(EthernetClient cl) {
+  cl.println("HTTP/1.1 200 OK");
+  cl.println("Content-Type: text/html");
+  cl.println("Connection: close");
+  cl.println();
+  char c;
+  k = 0;
+  do {
+    c = (char)pgm_read_byte_near(htm + k++);
+    cl.print(c);
+  } while (c != '\0');
 }
 
 void pntFooter(EthernetClient cl)
@@ -182,21 +201,23 @@ void pntFooter(EthernetClient cl)
 
 // switch LED and send back HTML for LED checkbox
 void pChk(EthernetClient cl, int x, boolean st)
-{  
-    cl.println("<div class=\"slideThree\">");
-    cl.print("<input type=\"checkbox\" value=\"");
-    cl.print(x);
-    cl.print("\" id=\"chk");
-    cl.print(x);
-    cl.print("\" name=\"");
-    cl.print("H");
-    cl.print("\" onclick=\"processar(\'");
-    cl.print(x);
-    cl.print("\');\"");
-    if (st) { cl.print("checked"); }; 
-    cl.print("><label for=\"chk");
-    cl.print(x);
-    cl.print("\">");
-    cl.print(x);
-    cl.print("</label></div>");
+{
+  cl.println("<div class=\"slideThree\">");
+  cl.print("<input type=\"checkbox\" value=\"");
+  cl.print(x);
+  cl.print("\" id=\"chk");
+  cl.print(x);
+  cl.print("\" name=\"");
+  cl.print("H");
+  cl.print("\" onclick=\"processar(\'");
+  cl.print(x);
+  cl.print("\');\"");
+  if (st) {
+    cl.print("checked");
+  };
+  cl.print("><label for=\"chk");
+  cl.print(x);
+  cl.print("\">");
+  cl.print(x);
+  cl.print("</label></div>");
 }
