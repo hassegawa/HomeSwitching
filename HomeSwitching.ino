@@ -1,3 +1,6 @@
+// Marcio Hassegawa
+// v 1.0.1.0
+
 #include <SPI.h>
 #include <Ethernet.h>
 #include <avr/pgmspace.h>
@@ -9,8 +12,9 @@ const int Q = 10; //max 10
 int outA[10] = {2, 3, 5, 6, 7, 8, 9, 14, 15, 16}; // Select the pinout address
 boolean outS[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int outT[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-boolean rdg = false;
-boolean rdp = false;
+bool rdg = false;
+bool rdp = false;
+bool tT = false;
 int outp = 0;
 int k;
 int pin;
@@ -103,6 +107,7 @@ void loop() {
       }
       if (outT[i] == 1) {
         outT[i] = 0;
+        outS[i] = LOW;
         digitalWrite(outA[i], LOW);
       }
     }
@@ -154,7 +159,7 @@ void loop() {
         if ((rdp) && (pin >= 0)) {
           if (c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9') {
             int v = atoi(&c);
-            outT[pin] = v * 60;
+            outT[pin] = v * 15;
           }
         }
 
